@@ -5,23 +5,127 @@
         <link rel="stylesheet" type="text/css" href="style.css" />
     </head>
     <body>
-        <div class="container">
-            <div class="item-1 but"><h1>1</h1></div>
-            <div class="item-2 but"><h1>2</h1></div>
-            <div class="item-3 but"><h1>3</h1></div>
-            <div class="item-4 but"><h1>4</h1></div>
-            <div class="item-5 but"><h1>5</h1></div>
-            <div class="item-6 but"><h1>6</h1></div>
-            <div class="item-7 but"><h1>7</h1></div>
-            <div class="item-8 but"><h1>8</h1></div>
-            <div class="item-9 but"><h1>9</h1></div>
-            <div class="item-0 but"><h1>0</h1></div>
-            <div class="item-c but"><h1>C</h1></div>
-            <div class="item-equal but"><h1>=</h1></div>
-            <div class="item-plus but"><h1>+</h1></div>
-            <div class="item-minus but"><h1>-</h1></div>
-            <div class="item-div but"><h1>%</h1></div>
-            <div class="item-mul but"><h1>*</h1></div>
+        <dbuttoniv class="container">
+            <div class="mainWindow">
+                <div id='secondary'></div>
+                <div id='main'>0</div>
+            </div>
+            <button data-key="49"><h1>1</h1></button>
+            <button data-key="50"><h1>2</h1></button>
+            <button data-key="51"><h1>3</h1></button>
+            <button data-key="52"><h1>4</h1></button>
+            <button data-key="53"><h1>5</h1></button>
+            <button data-key="54"><h1>6</h1></button>
+            <button data-key="55"><h1>7</h1></button>
+            <button data-key="56"><h1>8</h1></button>
+            <button data-key="57"><h1>9</h1></button>
+            <button data-key="48"><h1>0</h1></button>
+            <button data-key="8"><h1>C</h1></button>
+            <button data-key="187"><h1>=</h1></button>
+            <button data-key="107"><h1>+</h1></button>
+            <button data-key="109"><h1>-</h1></button>
+            <button data-key="111"><h1>%</h1></button>
+            <button data-key="106"><h1>*</h1></button>
         </div>
+        <script>
+            const calcMainScr = document.querySelector("#main")
+            const calcSecScr = document.querySelector("#secondary")
+            let value = 0
+            let prevValue = undefined
+            let selectedFunc
+            let calculated = false
+
+            function sum (a, b) {
+                return Number(a) + Number(b)
+            }
+
+            function sub (a, b) {
+                return Number(a) - Number(b)
+            }  
+
+            function mul (a, b) {
+                return Number(a) * Number(b)
+            }
+
+            function div (a, b) {
+                return Number(a) / Number(b)
+            }      
+            
+            function keyPressed(e) {
+                const key = document.querySelector(`button[data-key='${e.keyCode}']`)
+                if (!key) {
+                    return
+                }
+                if (key.getAttribute("data-key") >= 48 && key.getAttribute("data-key") <= 57) {
+                    if (calculated) {
+                        clearAll()
+                    }
+                    value = Number(value) * 10 + Number(key.textContent)
+                    calcMainScr.textContent = value
+                }
+            }
+
+            function clearAll() {
+                value = 0
+                        prevValue = undefined
+                        calcMainScr.textContent = 0
+                        calcSecScr.style.visibility = 'hidden'
+                        calcSecScr.textContent = ""
+                        calculated = false                
+            }
+
+            function preparation (func, symb) {
+                value = 0
+                prevValue = calcMainScr.textContent
+                selectedFunc = func
+                calcSecScr.style.visibility = 'visible'
+                calcSecScr.textContent = calcSecScr.textContent + ` ${prevValue} ` + `${symb}`
+                value = selectedFunc(prevValue, calcMainScr.textContent)
+            }
+
+            function calculation (final) {
+                calculated = true
+                calcSecScr.textContent = calcSecScr.textContent + ` ${value} =`
+                prevValue = undefined
+            }
+
+            function buttonPressed(e) {
+                if (this.getAttribute("data-key") >= 48 && this.getAttribute("data-key") <= 57) {
+                    if (calculated) {
+                        clearAll()
+                    }                     
+                    value = Number(value) * 10 + Number(this.textContent)
+                    calcMainScr.textContent = value
+                } else {
+                    switch(this.getAttribute("data-key")) {
+                        case "8":
+                            clearAll()
+                        break
+                        case '187':
+                            value = calcMainScr.textContent
+                            calcMainScr.textContent = selectedFunc(prevValue, value)
+                            calcSecScr.textContent = calcSecScr.textContent + ` ${value} =`
+                            calculated = true
+                        break
+                        case '107':
+                            preparation (sum, '+')
+                        break
+                        case '109':
+                            preparation (sub, '-')
+                        break
+                        case '111':
+                            preparation (div, '/')
+                        break
+                        case '106':
+                            preparation (mul, '*')
+                        break                  
+                    }
+                }
+            }
+
+            const keys = document.querySelectorAll("button")
+            keys.forEach(key => key.addEventListener("click", buttonPressed))
+            window.addEventListener("keydown", keyPressed)
+        </script>
     </body>
 </html>
