@@ -26,14 +26,19 @@
             <button data-key="109"><h1>-</h1></button>
             <button data-key="111"><h1>%</h1></button>
             <button data-key="106"><h1>*</h1></button>
+            <button data-key="110"><h1>.</h1></button>
         </div>
         <script>
             const calcMainScr = document.querySelector("#main")
             const calcSecScr = document.querySelector("#secondary")
             let value = 0
-            let prevValue = undefined
-            let selectedFunc
+            let prevValue = 0
+            let selectedFunc = undefined
             let calculated = false
+            let needToClearMain = false
+            let funcAdded = false
+            let floatPointNum = false
+            let flaatPointCount = 1
 
             function sum (a, b) {
                 return Number(a) + Number(b)
@@ -51,77 +56,118 @@
                 return Number(a) / Number(b)
             }      
             
+            function clearAll() {
+                value = 0
+                prevValue = 0
+                calcMainScr.textContent = 0
+                calcSecScr.style.visibility = 'hidden'
+                calcSecScr.textContent = ""
+                calculated = false
+                needToClearMain = false
+                funcAdded = false         
+            }
+
+            function numberSelected(e) {
+                if (calculated) {
+                    clearAll()
+                } else if (needToClearMain) {
+                    value = 0
+                    needToClearMain = false
+                }
+                if (floatPointNum) {
+                    value = (Number(value) + Number(e) / (10 ** flaatPointCount)).toFixed(flaatPointCount)
+                    flaatPointCount ++
+                } else {
+                    value = value * 10 + Number(e) 
+                }         
+                               
+            }
+
+            function funcSelected(e) {
+                floatPointNum = false
+                flaatPointCount = 1 
+                switch(e) {
+                    case "8":
+                        clearAll()
+                    break
+                    case '187':
+                        if(calculated) {
+                            break
+                        }
+                        calcSecScr.textContent = calcSecScr.textContent + ` ${value} =`
+                        if(selectedFunc) {
+                            value = selectedFunc(prevValue, value)
+                        }
+                        calculated = true
+                    break
+                    case '107':
+                        preparation (sum, '+')
+                    break
+                    case '109':
+                        preparation (sub, '-')
+                    break
+                    case '111':
+                        preparation (div, '/')
+                    break
+                    case '106':
+                        preparation (mul, '*')
+                    break
+                    case '110':
+                    floatPointNum = true
+                    break                 
+                }
+            }
+
+            function preparation (func, symb) {
+                if (calculated) {
+                    calcSecScr.textContent = ''
+                    prevValue = value
+                    calculated = false
+                    funcAdded = false                  
+                } 
+
+                if (funcAdded) {
+                    calcSecScr.textContent = calcSecScr.textContent + ` ${value} ` + `${symb}`                     
+                    prevValue = selectedFunc(prevValue, value)
+                    value = prevValue
+                    funcAdded = true
+                } else {
+                    prevValue = value
+                    calcSecScr.textContent = calcSecScr.textContent + ` ${prevValue} ` + `${symb}`
+                    funcAdded = true                  
+                }                
+                selectedFunc = func
+                needToClearMain = true
+            }
+
+            function buttonPressed(e) {
+                if (this.getAttribute("data-key") >= 48 && this.getAttribute("data-key") <= 57) {
+                    numberSelected(this.textContent)
+                } else {
+                    funcSelected(this.getAttribute("data-key"))
+                }
+
+                calcMainScr.textContent = value
+                if (calcSecScr.textContent !== '') {
+                    calcSecScr.style.visibility = 'visible'
+                }
+            }
+
             function keyPressed(e) {
                 const key = document.querySelector(`button[data-key='${e.keyCode}']`)
                 if (!key) {
                     return
                 }
                 if (key.getAttribute("data-key") >= 48 && key.getAttribute("data-key") <= 57) {
-                    if (calculated) {
-                        clearAll()
-                    }
-                    value = Number(value) * 10 + Number(key.textContent)
-                    calcMainScr.textContent = value
-                }
-            }
-
-            function clearAll() {
-                value = 0
-                        prevValue = undefined
-                        calcMainScr.textContent = 0
-                        calcSecScr.style.visibility = 'hidden'
-                        calcSecScr.textContent = ""
-                        calculated = false                
-            }
-
-            function preparation (func, symb) {
-                value = 0
-                prevValue = calcMainScr.textContent
-                selectedFunc = func
-                calcSecScr.style.visibility = 'visible'
-                calcSecScr.textContent = calcSecScr.textContent + ` ${prevValue} ` + `${symb}`
-                value = selectedFunc(prevValue, calcMainScr.textContent)
-            }
-
-            function calculation (final) {
-                calculated = true
-                calcSecScr.textContent = calcSecScr.textContent + ` ${value} =`
-                prevValue = undefined
-            }
-
-            function buttonPressed(e) {
-                if (this.getAttribute("data-key") >= 48 && this.getAttribute("data-key") <= 57) {
-                    if (calculated) {
-                        clearAll()
-                    }                     
-                    value = Number(value) * 10 + Number(this.textContent)
-                    calcMainScr.textContent = value
+                    numberSelected(key.textContent)
                 } else {
-                    switch(this.getAttribute("data-key")) {
-                        case "8":
-                            clearAll()
-                        break
-                        case '187':
-                            value = calcMainScr.textContent
-                            calcMainScr.textContent = selectedFunc(prevValue, value)
-                            calcSecScr.textContent = calcSecScr.textContent + ` ${value} =`
-                            calculated = true
-                        break
-                        case '107':
-                            preparation (sum, '+')
-                        break
-                        case '109':
-                            preparation (sub, '-')
-                        break
-                        case '111':
-                            preparation (div, '/')
-                        break
-                        case '106':
-                            preparation (mul, '*')
-                        break                  
-                    }
+                    funcSelected(key.getAttribute("data-key"))
                 }
-            }
+                calcMainScr.textContent = value
+                if (selectedFunc !== undefined) {
+                    calcSecScr.style.visibility = 'visible'
+                }
+            }            
 
             const keys = document.querySelectorAll("button")
             keys.forEach(key => key.addEventListener("click", buttonPressed))
